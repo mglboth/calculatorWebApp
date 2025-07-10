@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <table border="1">
+            <tr>
+                <td colspan = "4">
+                    <input type = "text" id = "inputBox" value = "0" readonly/>
+                </td>
+            </tr>
+            <tr>
+                <td class = "digitButton" onclick = "digitButtonPressed(7)">7</td>
+                <td class = "digitButton" onclick = "digitButtonPressed(8)">8</td>
+                <td class = "digitButton" onclick = "digitButtonPressed(9)">9</td>
+                <td class = "operatorButton" onclick = "operatorButtonPressed('x')">x</td>
+            </tr>
+            <tr>
+                <td class = "digitButton" onclick = "digitButtonPressed(4)">4</td>
+                <td class = "digitButton" onclick = "digitButtonPressed(5)">5</td>
+                <td class = "digitButton" onclick = "digitButtonPressed(6)">6</td>
+                <td class = "operatorButton" onclick = "operatorButtonPressed('-')">-</td>
+            </tr>
+            <tr>
+                <td class = "digitButton" onclick = "digitButtonPressed(1)">1</td>
+                <td class = "digitButton" onclick = "digitButtonPressed(2)">2</td>
+                <td class = "digitButton" onclick = "digitButtonPressed(3)">3</td>
+                <td class = "operatorButton" onclick = "operatorButtonPressed('+')">+</td>
+            </tr>
+            <tr>
+                <td colspan = "2" class = "digitButton" onclick = "digitButtonPressed(0)">0</td>
+
+                <td class = "ACButton" onclick="buttonACPressed()">AC</td>
+                <td class = "operatorButton" onclick = "operatorButtonPressed('/')">/</td>
+            </tr>
+            <tr>
+                <td colspan = "4" class = "operatorButton" onclick = "equalButtonPressed()">=</td>
+            </tr>
+        </table>
+
+        <script>
+
+            var newLine = true; 
+            var value1;
+            var currentOperator;
+
+            function digitButtonPressed(button)
+            {
+                if (newLine == true)
+                {
+                    document.getElementById("inputBox").value = button;
+                    newLine = false;
+                }
+                else
+                {
+                    var currentValue = document.getElementById("inputBox").value;
+                    document.getElementById("inputBox").value = currentValue + button;
+                }
+            }
+
+            function buttonACPressed()
+            {
+                document.getElementById("inputBox").value = "0";
+                newLine = true;
+            }
+
+            function operatorButtonPressed(operator)
+            {
+                currentOperator = operator;
+                value1 = parseFloat(document.getElementById("inputBox").value);
+                newLine = true;
+            }
+
+            function equalButtonPressed()
+            {
+               var value2 = parseFloat(document.getElementById("inputBox").value);
+               var finalTotal;
+
+                switch (currentOperator) 
+                {
+                    case 'x':
+                        finalTotal = value1 * value2;
+                        break;
+                    case '-':
+                        finalTotal = value1 - value2;
+                        break;
+                    case '+':
+                        finalTotal = value1 + value2;
+                        break;
+                    case '/':
+                        if (value2 != 0) 
+                        {
+                            finalTotal = value1 / value2;
+                        } else 
+                        {
+                            alert("Cannot divide by zero");
+                            return;
+                        }
+                        break;
+                    default:
+                        alert("Invalid operator");
+                        return;
+                }
+                document.getElementById("inputBox").value = finalTotal;
+
+                value1 = 0;
+                newLine = true;
+            }
+        </script>
+    </body>
+</html>
