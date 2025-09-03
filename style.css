@@ -1,37 +1,266 @@
+/* Title Bar Styles */
+.titlebar 
+{
+    -webkit-app-region: drag;
+    height: 50px;
+    width: auto;
+    background: #222;
+    display: flex;
+    background-color: #4e494d;
+    border-bottom: #656165 1px solid;
+    justify-content: flex-end;
+}
+.titlebar button
+{
+    -webkit-app-region: no-drag; /* buttons must not be draggable */
+    color: white;
+    background-color: #4e494d;
+    border: none;
+    width: 45px;
+    order: 2; /* Ensure maximize, minimize, close buttons are on the right */
+    height: 50px;
+    font-family: Comic Sans MS;
+}
+
+.titlebar button.closeButton:hover
+{
+    background-color: #af1313;
+}
+.titlebar button.minimizeButton:hover
+{
+    background-color: #656165;
+}
+.titlebar button.maximizeButton:hover
+{
+    background-color: #656165;
+}
+/*General Styles*/
+html, body 
+{
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* hides scrollbars */
+    box-sizing: border-box;
+    cursor: default;
+}
+
+body 
+{
+  transform: scale(1);
+  transform-origin: top left;
+  width: 100%;                  
+  height: auto;
+}
+
+/*Calculator Styles */
 table 
 {
     color: #fff;
     text-align: center;
     border-collapse: collapse;
-    font: normal 3em Arial, Helvetica, sans-serif;
+    font: normal 2.5em Arial, Helvetica, sans-serif;
+    background-color: #4e494d;
+    width: 100%;
+    height: 100%;
+    table-layout: fixed;
 }
-tr{
+
+tr 
+{
     height: 16.02vh;
     background-color: #4e494d;
+    width: auto;
 }
-td
+
+td 
 {
     width: 25vw;
+    height: auto;
     border: 1px solid #4e494d;
+    resize: both;
 }
-#inputBox
+
+#inputBox 
 {
+    overflow: hidden;
+    resize: both;
+    font-family: Comic Sans MS;
     background-color: #4e494d;
     text-align: right;
     width: 100%;
-    font-size: 2em;
+    height: auto;
+    font-size: 1.25em;
     color: #fff;
     border: 0px;
+    cursor: default;
 }
-.digitButton
+
+/* Buttons */
+.digitButton 
 {
+    resize: both;
+    font-family: Comic Sans MS;
     background-color: #807e80;
+    cursor: pointer;
+    user-select: none;
 }
-.operatorButton
-{
-    background-color: #ff9e06;
-}
-.ACButton
+.digitButton:hover 
 {
     background-color: #656165;
+    cursor: pointer;
+    user-select: none;
+}
+
+.operatorButton 
+{
+    resize: both;
+    font-family: Comic Sans MS;
+    background-color: #a72700;
+    cursor: pointer;
+    user-select: none;
+}
+.operatorButton:hover 
+{
+    background-color: #c7390e;
+    cursor: pointer;
+    user-select: none;
+}
+
+.ACButton 
+{
+    resize: both;
+    font-family: Comic Sans MS;
+    background-color: #656165;
+    cursor: pointer;
+    user-select: none;
+}
+.ACButton:hover 
+{
+    background-color: #807e80;
+    cursor: pointer;
+    user-select: none;
+}
+
+.backspace 
+{
+    resize: both;
+    font-family: Comic Sans MS;
+    background-color: #656165;
+    cursor: pointer;
+    user-select: none;
+}
+.backspace:hover 
+{
+    background-color: #807e80;
+    cursor: pointer;
+    user-select: none;
+}
+
+.percentButton 
+{
+    resize: both;
+    font-family: Comic Sans MS;
+    background-color: #656165;
+    cursor: pointer;
+    user-select: none;
+}
+.percentButton:hover 
+{
+    background-color: #807e80;
+    cursor: pointer;
+    user-select: none;
+}
+
+.decimalButton 
+{
+    resize: both;
+    font-family: Comic Sans MS;
+    background-color: #656165;
+    cursor: pointer;
+    user-select: none;
+}
+.decimalButton:hover 
+{
+    background-color: #807e80;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggleSign 
+{
+    resize: both;
+    font-family: Comic Sans MS;
+    background-color: #656165;
+    cursor: pointer;
+    user-select: none;
+}
+.toggleSign:hover 
+{
+    background-color: #807e80;
+    cursor: pointer;
+    user-select: none;
+}
+
+.equalButton
+{
+    resize: both;
+    font-family: Comic Sans MS;
+    background-color: #c7390e;
+    cursor: pointer;
+    user-select: none;
+}
+.equalButton:hover
+{
+    font-family: Comic Sans MS;
+    background-color: #a72700;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Highlight colors for key pressed */
+
+.keyPressed-digitButton 
+{
+    background-color:  #656165!important;
+}
+
+.keyPressed-operatorButton 
+{
+    background-color: #c7390e !important;
+}
+
+.keyPressed-ACButton 
+{
+    background-color:  #807e80 !important;
+}
+
+.keyPressed-backspace 
+{
+    background-color:  #807e80 !important;
+}
+
+.keyPressed-percentButton 
+{
+    background-color:  #807e80 !important;
+}
+
+.keyPressed-decimalButton 
+{
+    background-color:  #807e80!important;
+}
+
+.keyPressed-toggleSign 
+{
+    background-color:  #807e80!important;
+}
+
+.keyPressed-equalButton 
+{
+    background-color: #a72700 !important;
+}
+.keyPressed-refreshButton
+{
+    background-color:  #656165 !important;
 }

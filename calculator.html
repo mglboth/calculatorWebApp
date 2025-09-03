@@ -1,61 +1,386 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="stylesheet" href="style.css">
+        <link rel = "stylesheet" href = "style.css">
     </head>
     <body>
-        <table border="1">
+        
+        <div class="titlebar">
+            <button class="minimizeButton" onclick="window.electronAPI.minimize()">_</button>
+            <button class="maximizeButton" style="font-size: 1.5em;" onclick="window.electronAPI.maximize()">□</button>
+            <button class="closeButton" onclick="window.electronAPI.close()">X</button>
+        </div>
+
+        <table border = "1">
+
             <tr>
                 <td colspan = "4">
-                    <input type = "text" id = "inputBox" value = "0" readonly/>
+                    <input type = "text" id = "inputBox" value = "0" readonly>
                 </td>
             </tr>
-            <tr>
-                <td class = "digitButton" onclick = "digitButtonPressed(7)">7</td>
-                <td class = "digitButton" onclick = "digitButtonPressed(8)">8</td>
-                <td class = "digitButton" onclick = "digitButtonPressed(9)">9</td>
-                <td class = "operatorButton" onclick = "operatorButtonPressed('x')">x</td>
-            </tr>
-            <tr>
-                <td class = "digitButton" onclick = "digitButtonPressed(4)">4</td>
-                <td class = "digitButton" onclick = "digitButtonPressed(5)">5</td>
-                <td class = "digitButton" onclick = "digitButtonPressed(6)">6</td>
-                <td class = "operatorButton" onclick = "operatorButtonPressed('-')">-</td>
-            </tr>
-            <tr>
-                <td class = "digitButton" onclick = "digitButtonPressed(1)">1</td>
-                <td class = "digitButton" onclick = "digitButtonPressed(2)">2</td>
-                <td class = "digitButton" onclick = "digitButtonPressed(3)">3</td>
-                <td class = "operatorButton" onclick = "operatorButtonPressed('+')">+</td>
-            </tr>
-            <tr>
-                <td colspan = "2" class = "digitButton" onclick = "digitButtonPressed(0)">0</td>
 
-                <td class = "ACButton" onclick="buttonACPressed()">AC</td>
+            <tr>  
+                <td class = "percentButton" onclick = "percentButtonPressed()">%</td>
+                <td class = "ACButton" onclick = "buttonACPressed()">AC</td>
+                <td class = "backspace" onclick = "backSpacePressed()">Back</td>
                 <td class = "operatorButton" onclick = "operatorButtonPressed('/')">/</td>
             </tr>
+
             <tr>
-                <td colspan = "4" class = "operatorButton" onclick = "equalButtonPressed()">=</td>
+                <td class = "digitButton" onclick = "digitButtonPressed('7')">7</td>
+                <td class = "digitButton" onclick = "digitButtonPressed('8')">8</td>
+                <td class = "digitButton" onclick = "digitButtonPressed('9')">9</td>
+                <td class = "operatorButton" onclick = "operatorButtonPressed('x')">x</td>
             </tr>
+
+            <tr>
+                <td class = "digitButton" onclick = "digitButtonPressed('4')">4</td>
+                <td class = "digitButton" onclick = "digitButtonPressed('5')">5</td>
+                <td class = "digitButton" onclick = "digitButtonPressed('6')">6</td>
+                <td class = "operatorButton" onclick = "operatorButtonPressed('-')">-</td>
+            </tr>
+
+            <tr>
+                <td class = "digitButton" onclick = "digitButtonPressed('1')">1</td>
+                <td class = "digitButton" onclick = "digitButtonPressed('2')">2</td>
+                <td class = "digitButton" onclick = "digitButtonPressed('3')">3</td>
+                <td class = "operatorButton" onclick = "operatorButtonPressed('+')">+</td>
+            </tr>
+
+            <tr>
+                <td class = "toggleSign" onclick = "toggleSignPressed()">+/-</td>
+                <td class = "digitButton" onclick="digitButtonPressed('0')">0</td>
+                <td class = "decimalButton" onclick = "decimalButtonPressed()">.</td>
+                <td class = "operatorButton equalButton" onclick = "equalButtonPressed()">=</td>
+            </tr>
+
         </table>
 
         <script>
 
+            var operatorJustPressed = false;
+            var lastOperator = null;
+            var lastOperand = null;
             var newLine = true; 
             var value1;
             var currentOperator;
+            var justEvaluated = false;
+            var keyPressed = {};
+            var inputBox;
+            var percentHappened = false;
+            var operatorHappened = false;
+            var holdInterval = null;
+            var holdKey = null;
+            var amountOfNumbers = 0;
+            var operatorPressCount = 0;
+
+            // Prevents double click selection
+            document.addEventListener('mousedown', function(event) 
+            {
+                if (event.detail >= 1) 
+                {
+                    event.preventDefault();
+                }
+            }, false);
+
+            // Prevents tab key from focusing away
+            document.addEventListener('keydown', function(event) 
+            {
+                if (event.key === 'Tab') 
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false; // extra safety
+                }
+            }, true); // <-- capture phase
+
+            // Handles keydown events
+            document.addEventListener('keydown', function(event)
+            {
+                var key = event.key;
+
+                if (keyPressed[key]) return;
+                keyPressed[key] = true;
+
+                if (key >= '0' && key <= '9' && event.key.length === 1)
+                {
+                    digitButtonPressed(key);
+                    addHighlight('digitButton', key);
+
+                    if (holdInterval === null)
+                    {
+                        holdKey = key;
+                        holdInterval = setInterval(function()
+                        {
+                            digitButtonPressed(key);
+                        }, 150);
+                    }
+                }
+                else if (key === '.')
+                {
+                    decimalButtonPressed();
+                    addHighlight('decimalButton', key);
+                }
+                else if (key === 'Enter' || key === '=')
+                {
+                    equalButtonPressed();
+                    addHighlight('equalButton', '=');
+
+                    if (holdInterval === null)
+                    {
+                        holdKey = key;
+                        holdInterval = setInterval(function()
+                        {
+                            equalButtonPressed();
+                        }, 150);
+                    }
+                }
+                else if (key === 'Delete')
+                {
+                    event.preventDefault();
+                    buttonACPressed();
+                    addHighlight('ACButton', 'AC');
+                }
+                else if (key === '+')
+                {
+                    operatorButtonPressed('+');
+                    addHighlight('operatorButton', '+');
+                }
+                else if (key === '-')
+                {
+                    operatorButtonPressed('-');
+                    addHighlight('operatorButton', '-');
+                }
+                else if (key === '*' || key.toLowerCase() === 'x')
+                {
+                    operatorButtonPressed('x');
+                    addHighlight('operatorButton', 'x');
+                }
+                else if (key === '/')
+                {
+                    operatorButtonPressed('/');
+                    addHighlight('operatorButton', '/');
+                }
+                else if (key === 'Backspace')
+                {
+                    event.preventDefault();
+                    backSpacePressed();
+                    addHighlight('backspace', 'Back');
+
+                    if (holdInterval === null)
+                    {
+                        holdKey = key;
+                        holdInterval = setInterval(function()
+                        {
+                            backSpacePressed();
+                        }, 150);
+                    }
+                }
+                else if (key === '%')
+                {
+                    percentButtonPressed();
+                    addHighlight('percentButton', '%');
+                }
+                else if (key === 's')
+                {
+                    toggleSignPressed();
+                    addHighlight('toggleSign', '+/-');
+                }
+
+                return;
+            });
+
+            // Handles keyup events
+            document.addEventListener('keyup', function(event)
+            {
+                var key = event.key;
+                keyPressed[key] = false;
+
+                if (key >= '0' && key <= '9')
+                {
+                    removeHighlight('digitButton', key);
+
+                    if (holdKey === key)
+                    {
+                        clearInterval(holdInterval);
+                        holdInterval = null;
+                        holdKey = null;
+                    }
+                }
+                else if (key === '.')
+                {
+                    removeHighlight('decimalButton', key);
+                }
+                else if (key === 'Enter' || key === '=')
+                {
+                    removeHighlight('equalButton', '=');
+
+                    if (holdKey === key)
+                    {
+                        clearInterval(holdInterval);
+                        holdInterval = null;
+                        holdKey = null;
+                    }
+                }
+                else if (key === 'Delete')
+                {
+                    removeHighlight('ACButton', 'AC');
+                }
+                else if (key === '+' || key === '-' || key === '*' || key.toLowerCase() === 'x' || key === '/')
+                {
+                    var opKey = (key === '*' || key.toLowerCase() === 'x') ? 'x' : key;
+                    removeHighlight('operatorButton', opKey);
+                }
+                else if (key === 'Backspace')
+                {
+                    removeHighlight('backspace', 'Back');
+
+                    if (holdKey === key)
+                    {
+                        clearInterval(holdInterval);
+                        holdInterval = null;
+                        holdKey = null;
+                    }
+                }
+                else if (key === '%')
+                {
+                    removeHighlight('percentButton', '%');
+                }
+                else if (key === 's')
+                {
+                    removeHighlight('toggleSign', '+/-');
+                }
+            });
+
+            function autoScrollInputBox() 
+            {
+                var inputBox = document.getElementById("inputBox");
+                inputBox.scrollLeft = inputBox.scrollWidth;
+            }
+
+            function addHighlight(className, key) 
+            {
+                var buttons = document.querySelectorAll('.' + className);
+                buttons.forEach(function(btn)
+                {
+                    if (btn.textContent.trim() === key)
+                    {
+                        btn.classList.add('keyPressed-' + className);
+                    }
+                });
+            }
+
+            function removeHighlight(className, key) 
+            {
+                var buttons = document.querySelectorAll('.' + className);
+                buttons.forEach(function(btn)
+                {
+                    if (btn.textContent.trim() === key)
+                    {
+                        btn.classList.remove('keyPressed-' + className);
+                    }
+                });
+            }
+
+            function backSpacePressed()
+            {
+                if (justEvaluated == true)
+                {
+                    return; 
+                }
+
+                var inputBox = document.getElementById("inputBox");
+                var currentValue = inputBox.value;
+
+                if (currentValue.length > 1) 
+                {
+                    inputBox.value = currentValue.slice(0, -1);
+                } 
+                else 
+                {
+                    inputBox.value = "0";
+                    newLine = true;
+                }
+
+                autoScrollInputBox();
+            }
 
             function digitButtonPressed(button)
             {
-                if (newLine == true)
+                var inputBox = document.getElementById("inputBox");
+
+                if (justEvaluated == false)
                 {
-                    document.getElementById("inputBox").value = button;
-                    newLine = false;
+                    if (newLine || justEvaluated)
+                    {
+                        inputBox.value = button;
+                        newLine = false;
+                        justEvaluated = false;
+                    }
+                    else 
+                    {
+                        inputBox.value = inputBox.value + button;
+                    }
+
+                    operatorJustPressed = false;
                 }
-                else
+                else 
                 {
-                    var currentValue = document.getElementById("inputBox").value;
-                    document.getElementById("inputBox").value = currentValue + button;
+                    return;
+                }
+
+                autoScrollInputBox();
+            }
+
+            function moveDigitLeft()
+            {
+                var inputBox = document.getElementById("inputBox");
+                var currentValue = inputBox.value;
+
+                if (currentValue.length > 1) 
+                {
+                    inputBox.value = currentValue.slice(0, -1);
+                } 
+                else 
+                {
+                    inputBox.value = "0";
+                    newLine = true;
+                }
+            }
+
+            function decimalButtonPressed()
+            {
+                var inputBox = document.getElementById("inputBox");
+                var currentValue = inputBox.value;
+
+                if (justEvaluated == false && currentValue == 0)
+                {
+                    inputBox.value = "0.";
+                    justEvaluated = false;
+                    newLine = false;
+                    return;
+                }
+                else if (justEvaluated == true && currentValue == 0)
+                {
+                    buttonACPressed();
+                    inputBox.value = "0.";
+                    justEvaluated = false;
+                    newLine = false;
+                    return;
+                }
+                else if (justEvaluated == true && currentValue != 0)
+                {
+                    return;
+                }
+
+                if (currentValue.indexOf('.') == -1) 
+                {
+                    inputBox.value = currentValue + '.';
+                }
+
+                if (inputBox.value.length > 22) 
+                {
+                    autoScrollInputBox();
                 }
             }
 
@@ -63,50 +388,274 @@
             {
                 document.getElementById("inputBox").value = "0";
                 newLine = true;
+                justEvaluated = false;
+                value1 = undefined;
+                currentOperator = undefined;
+                lastOperand = null;
+                lastOperator = null;
+                amountOfNumbers = 0;
+                operatorPressCount = 0;
+                percentHappened = false;
+                operatorPressCount = 0;
             }
 
             function operatorButtonPressed(operator)
             {
-                currentOperator = operator;
-                value1 = parseFloat(document.getElementById("inputBox").value);
-                newLine = true;
-            }
+                var inputBox = document.getElementById("inputBox");
+                var currentValue = parseFloat(inputBox.value);
 
-            function equalButtonPressed()
-            {
-               var value2 = parseFloat(document.getElementById("inputBox").value);
-               var finalTotal;
-
-                switch (currentOperator) 
+                // If we already have a stored operator and number, compute first
+                if (typeof value1 !== "undefined" && typeof currentOperator !== "undefined" && newLine == false)
                 {
-                    case 'x':
-                        finalTotal = value1 * value2;
-                        break;
-                    case '-':
-                        finalTotal = value1 - value2;
-                        break;
-                    case '+':
-                        finalTotal = value1 + value2;
-                        break;
-                    case '/':
-                        if (value2 != 0) 
-                        {
-                            finalTotal = value1 / value2;
-                        } else 
-                        {
-                            alert("Cannot divide by zero");
-                            return;
-                        }
-                        break;
-                    default:
-                        alert("Invalid operator");
-                        return;
+                    switch (currentOperator)
+                    {
+                        case 'x':
+                            value1 = value1 * currentValue;
+                            break;
+                        case '-':
+                            value1 = value1 - currentValue;
+                            break;
+                        case '+':
+                            value1 = value1 + currentValue;
+                            break;
+                        case '/':
+                            value1 = value1 / currentValue;
+                            break;
+                    }
+                    inputBox.value = value1;
                 }
-                document.getElementById("inputBox").value = finalTotal;
+                else if (justEvaluated == true)
+                {
+                    // Continue from result after pressing '='
+                    value1 = parseFloat(inputBox.value);
+                }
+                else
+                {
+                    value1 = currentValue;
+                }
 
-                value1 = 0;
+                if (inputBox.value.length > 22) 
+                {
+                    autoScrollInputBox();
+                }
+
+                currentOperator = operator;
                 newLine = true;
+                justEvaluated = false;
+                operatorHappened = true;
+                operatorJustPressed = true;
+                operatorPressCount = operatorPressCount + 1;
             }
+
+            function toggleSignPressed() 
+            {
+                var inputBox = document.getElementById("inputBox");
+                var value = parseFloat(inputBox.value);
+                amountOfNumbers = 1;
+
+                if (justEvaluated == false)
+                {
+                    inputBox.value = (value * -1).toString();
+                }
+            }
+
+            function percentButtonPressed() 
+            {
+                var inputBox = document.getElementById("inputBox");
+                var currentValue = parseFloat(inputBox.value);
+
+                if (typeof value1 !== 'undefined' && typeof currentOperator !== 'undefined' && justEvaluated == false)
+                {
+                    currentValue = (value1 * currentValue) / 100;
+                    inputBox.value = currentValue.toString();
+                }
+                else
+                {
+                    if (justEvaluated == false)
+                    {
+                        inputBox.value = (currentValue / 100).toString();
+                    }
+                }
+
+                newLine = true;
+                justEvaluated = true;
+                percentHappened = true;
+                amountOfNumbers = 1;
+                
+                if (inputBox.value.length > 22) 
+                {
+                    autoScrollInputBox();
+                }
+            }
+
+            function equalButtonPressed() 
+            {
+                var inputBox = document.getElementById("inputBox");
+                var currentValue = parseFloat(inputBox.value);
+                var finalTotal;
+
+                // Case 1: Operator pressed but no second number entered
+                if (
+                    typeof currentOperator !== 'undefined' &&
+                    value1 !== undefined &&
+                    newLine === true &&
+                    justEvaluated === false
+                    ) 
+                {
+                    inputBox.value = value1;
+                    justEvaluated = true;
+                    currentOperator = undefined;
+                    operatorHappened = false;
+                    lastOperand = null;
+                    return;
+                }
+
+                // Case 2: New operation, store operands
+                if (!justEvaluated && !percentHappened && operatorPressCount > 0) 
+                {
+                    lastOperand = currentValue;
+                    lastOperator = currentOperator;
+                }
+                // Case 3: If no operation, just return the current input
+                if (
+                    typeof value1 === 'undefined' || 
+                    typeof lastOperator === 'undefined' || 
+                    lastOperand === null
+                   )
+                {
+                    finalTotal = currentValue;
+                }
+                // Case 4: Perform the maths using last known values
+                else if (!percentHappened && operatorPressCount > 0) 
+                {
+                    switch (lastOperator) 
+                    {
+                        case 'x':
+                            finalTotal = value1 * lastOperand;
+                            break;
+                        case '-':
+                            finalTotal = value1 - lastOperand;
+                            break;
+                        case '+':
+                            finalTotal = value1 + lastOperand;
+                            break;
+                        case '/':
+                            finalTotal = value1 / lastOperand;
+                            break;
+                        default:
+                            finalTotal = currentValue;
+                            return;
+                    }
+                }
+                // Case 5: The answer is 0
+                else if (!percentHappened && operatorPressCount > 0) 
+                {
+                    switch (lastOperator) 
+                    {
+                        case 'x':
+                            finalTotal = value1 * lastOperand;
+                            break;
+                        case '-':
+                            finalTotal = value1 - lastOperand;
+                            break;
+                        case '+':
+                            finalTotal = value1 + lastOperand;
+                            break;
+                        case '/':
+                            finalTotal = value1 / lastOperand;
+                            break;
+                        default:
+                            finalTotal = currentValue;
+                            return;
+                    }
+                }
+                // Case 6: Percent-based operation
+                else 
+                {
+                    finalTotal = value1;
+
+                    if (operatorHappened) 
+                    {
+                        switch (currentOperator) 
+                        {
+                            case 'x':
+                            finalTotal = finalTotal * currentValue;
+                            break;
+                            case '-':
+                            finalTotal = finalTotal - currentValue;
+                            break;
+                            case '+':
+                            finalTotal = finalTotal + currentValue;
+                            break;
+                            case '/':
+                            finalTotal = finalTotal / currentValue;
+                            break;
+                        }
+                    }
+                }
+
+                inputBox.value = finalTotal;
+                value1 = finalTotal;
+
+                // Easter Eggs
+                var funnyChance = Math.random(); // generates number between 0 and 1
+                var resultStr = finalTotal.toString();
+
+                if (funnyChance == 0.0001) 
+                {
+                    switch (resultStr) 
+                    {
+                        case "69":
+                            inputBox.value = "69. Hehe. Nice";
+                            break;
+                        case "8008":
+                            inputBox.value = "8008. Real Mature";
+                            break;
+                        case "80085":
+                            inputBox.value = "80085. Real Mature";
+                            break;
+                        case "420":
+                            inputBox.value = "420. Blaze it!";
+                            break;
+                        case "87":
+                            inputBox.value = "Was that the bite of 87?";
+                            break;
+                        case "83":
+                            inputBox.value = "No Mark. That was the bite of 83";
+                            break;
+                        case "47":
+                            inputBox.value = "47: 'I need to use the bathroom'";
+                            break;
+                        default:
+                            inputBox.value = finalTotal;
+                    }
+                } 
+                else 
+                {
+                    inputBox.value = finalTotal;
+                }
+
+                if (inputBox.value > 9.999999999996901e+306 || inputBox.value < -9.999999999996901e+306) 
+                {
+                    buttonACPressed();
+                }
+                
+                autoScrollInputBox();
+                
+
+                value1 = finalTotal;
+
+                newLine = true;
+                justEvaluated = true;
+                percentHappened = false;
+
+                
+            }
+
+                var holdInterval = null;
+                var holdKey = null;
+
         </script>
+
     </body>
 </html>
